@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
 import 'package:example_drift_with_bloc/utils/enums.dart';
@@ -128,6 +130,15 @@ class AppDatabase extends _$AppDatabase {
           ..orderBy([(tbl) => OrderingTerm.desc(tbl.date)])
           ..limit(limit, offset: offset))
         .get();
+  }
+
+  FutureOr<List<String?>> getTags() async {
+    return await (select(logs)
+          ..addColumns([logs.tag])
+          ..orderBy([(tbl) => OrderingTerm.asc(tbl.tag)]))
+        .get()
+        .then((value) => value.map((e) => e.tag).toList())
+        .then((value) => value.toSet().toList());
   }
 
   Future<List<History>> getHistories(
