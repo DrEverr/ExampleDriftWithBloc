@@ -1,8 +1,8 @@
+import 'package:example_drift_with_bloc/bloc/histories/histories_bloc.dart';
 import 'package:example_drift_with_bloc/database/database.dart';
-import 'package:example_drift_with_bloc/repository/history_repository.dart';
-import 'package:example_drift_with_bloc/utils/globals.dart';
 import 'package:example_drift_with_bloc/utils/routes.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 final class HistoryItem extends StatelessWidget {
   final History history;
@@ -28,7 +28,9 @@ final class HistoryItem extends StatelessWidget {
             color: Theme.of(context).colorScheme.secondary,
           ),
           onPressed: () {
-            getIt<HistoryRepository>().toggleFavourite(history);
+            context.read<HistoriesBloc>().add(
+                  HistoriesToggledFavourite(history),
+                );
           },
         ),
         title: Text(
@@ -47,7 +49,7 @@ final class HistoryItem extends StatelessWidget {
         onTap: () {
           Navigator.of(context).pushNamed(
             Routes.history,
-            arguments: history.id,
+            arguments: history,
           );
         },
       ),

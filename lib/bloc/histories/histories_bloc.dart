@@ -68,5 +68,17 @@ class HistoriesBloc extends Bloc<HistoriesEvent, HistoriesState> {
         emit(HistoriesLoadFailure(e.toString()));
       }
     });
+
+    on<HistoriesToggledFavourite>((event, emit) async {
+      emit(HistoriesLoadInProgress());
+      try {
+        await getIt<HistoryRepository>().toggleFavourite(event.history);
+        final histories =
+            await getIt<HistoryRepository>().getHistories(page, 10);
+        emit(HistoriesLoadSuccess(histories));
+      } catch (e) {
+        emit(HistoriesLoadFailure(e.toString()));
+      }
+    });
   }
 }

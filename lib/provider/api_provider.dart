@@ -21,7 +21,7 @@ final class ApiProvider {
         var decoded = jsonDecode(response.body) as List<dynamic>;
         await _database.insertBatchHistories(decoded.map((e) {
           return HistoriesCompanion(
-            apiId: Value(['id'] as String),
+            apiId: Value(e['id'] as String),
             title: Value(e['title'] as String?),
             description: Value(e['details'] as String?),
             article: Value(e['links']['article'] as String?),
