@@ -11,6 +11,8 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  repo:
+    path: ./packages/repo
   drift:
   drift_flutter:
   bloc:
