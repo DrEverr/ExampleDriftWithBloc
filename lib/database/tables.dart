@@ -2,7 +2,7 @@ part of 'database.dart';
 
 @DataClassName('History')
 class Histories extends Table {
-  IntColumn get id => integer().autoIncrement()();
+  TextColumn get id => text().unique()();
   TextColumn get title => text().nullable()();
   TextColumn get description => text().nullable()();
   TextColumn get article => text().nullable()();
@@ -11,7 +11,7 @@ class Histories extends Table {
 
 class Favourites extends Table {
   IntColumn get id => integer().autoIncrement()();
-  IntColumn get historyId => integer().references(Histories, #id)();
+  TextColumn get historyId => text().references(Histories, #id)();
 }
 
 class Logs extends Table {

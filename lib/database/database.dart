@@ -10,18 +10,14 @@ part 'tables.dart';
 
 @DriftDatabase(tables: [Histories, Favourites, Logs])
 class AppDatabase extends _$AppDatabase {
-  AppDatabase() : super(driftDatabase(name: 'sqlite.db'));
+  AppDatabase() : super(driftDatabase(name: 'example_drift_with_bloc.db'));
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 1;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
-        onUpgrade: (migrator, from, to) async {
-          if (from < 2) {
-            await migrator.createTable(logs);
-          }
-        },
+        onUpgrade: (migrator, from, to) async {},
       );
 
   Future<void> clearLogs() async {
@@ -53,32 +49,50 @@ class AppDatabase extends _$AppDatabase {
 
   Future<void> insertHistory(String? title, String? description,
       String? article, String? dateTime) async {
-    await into(histories).insert(HistoriesCompanion(
-      title: Value(title),
-      description: Value(description),
-      article: Value(article),
-      date: Value(dateTime != null ? DateTime.parse(dateTime) : null),
-    ));
+    var history = HistoriesCompanion(
+        title: Value(title),
+        description: Value(description),
+        article: Value(article),
+        date: Value(dateTime != null ? DateTime.parse(dateTime) : null));
+    await into(histories).insert(history,
+        onConflict: DoUpdate((_) => history, target: [histories.id]));
   }
 
-  Future<void> insertFavourite(int historyId) async {
+  Future<void> insertBatchHistories(List<History> historiesToInput) async {
+    await batch((batch) {
+      for (var history in historiesToInput) {
+        batch.insert(
+          histories,
+          history,
+          onConflict: DoUpdate((_) => history, target: [histories.id]),
+        );
+      }
+    });
+  }
+
+  Future<void> insertFavourite(String historyId) async {
     await into(favourites).insert(FavouritesCompanion(
       historyId: Value(historyId),
     ));
   }
 
-  Future<void> deleteFavourite(int historyId) async {
+  Future<void> deleteFavourite(String historyId) async {
     await (delete(favourites)..where((tbl) => tbl.historyId.equals(historyId)))
         .go();
   }
 
-  Future<void> deleteHistory(int historyId) async {
+  Future<void> deleteHistory(String historyId) async {
     await (delete(histories)..where((tbl) => tbl.id.equals(historyId))).go();
     deleteFavourite(historyId);
   }
 
   Future<List<History>> getAllHistories() async {
     return await select(histories).get();
+  }
+
+  Future<History?> getHistory(String id) async {
+    return await (select(histories)..where((tbl) => tbl.id.equals(id)))
+        .getSingleOrNull();
   }
 
   Future<List<History>> getAllFavourites() async {
@@ -88,6 +102,12 @@ class AppDatabase extends _$AppDatabase {
           ])
           ..get())
         .get();
+  }
+
+  Future<Favourite?> getFavourite(String historyId) async {
+    return await (select(favourites)
+          ..where((tbl) => tbl.historyId.equals(historyId)))
+        .getSingleOrNull();
   }
 
   Future<List<Log>> getAllLogs() async {
@@ -115,7 +135,7 @@ class AppDatabase extends _$AppDatabase {
 
   Future<Log?> getLastUpdate() async {
     return await (select(logs)
-          ..where((tbl) => tbl.tag.equals('update'))
+          ..where((tbl) => tbl.tag.equals('API'))
           ..orderBy([(tbl) => OrderingTerm.desc(tbl.date)])
           ..limit(1))
         .getSingleOrNull();
@@ -132,6 +152,16 @@ class AppDatabase extends _$AppDatabase {
         .get();
   }
 
+  Future<int> getLogsCount(LogLevel level) async {
+    return await (select(logs)..where((tbl) => tbl.level.equals(level.index)))
+        .get()
+        .then((value) => value.length);
+  }
+
+  Future<int> getLogsCountAll() async {
+    return await (select(logs)).get().then((value) => value.length);
+  }
+
   FutureOr<List<String?>> getTags() async {
     return await (select(logs)
           ..addColumns([logs.tag])
@@ -146,8 +176,8 @@ class AppDatabase extends _$AppDatabase {
     if (isFavourite) {
       return await (select(histories)
             ..join([
-              innerJoin(favourites,
-                  favourites.historyId.equalsExp(histories.id))
+              innerJoin(
+                  favourites, favourites.historyId.equalsExp(histories.id))
             ])
             ..orderBy([(tbl) => OrderingTerm.desc(tbl.date)])
             ..limit(limit, offset: offset))
