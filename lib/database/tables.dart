@@ -2,7 +2,8 @@ part of 'database.dart';
 
 @DataClassName('History')
 class Histories extends Table {
-  TextColumn get id => text().unique()();
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get apiId => text().unique()();
   TextColumn get title => text().nullable()();
   TextColumn get description => text().nullable()();
   TextColumn get article => text().nullable()();

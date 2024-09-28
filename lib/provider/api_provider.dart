@@ -1,5 +1,6 @@
 import 'dart:convert';
 
+import 'package:drift/drift.dart';
 import 'package:example_drift_with_bloc/database/database.dart';
 import 'package:example_drift_with_bloc/repository/log_repository.dart';
 import 'package:example_drift_with_bloc/utils/api/api.dart';
@@ -19,15 +20,15 @@ final class ApiProvider {
       if (response.statusCode == 200 && response.body.isNotEmpty) {
         var decoded = jsonDecode(response.body) as List<dynamic>;
         await _database.insertBatchHistories(decoded.map((e) {
-          return History(
-            id: e['id'] as String,
-            title: e['title'] as String?,
-            description: e['details'] as String?,
-            article: e['links']['article'] as String?,
-            date: e['event_date_utc'] != null
+          return HistoriesCompanion(
+            apiId: Value(['id'] as String),
+            title: Value(e['title'] as String?),
+            description: Value(e['details'] as String?),
+            article: Value(e['links']['article'] as String?),
+            date: Value(e['event_date_utc'] != null
                 ? DateTime.parse(e['event_date_utc'] as String)
-                : null,
-            isFavourite: false,
+                : null),
+            isFavourite: const Value(false),
           );
         }).toList());
       }

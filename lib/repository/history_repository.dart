@@ -21,7 +21,7 @@ final class HistoryRepository {
     await _database.clearHistories();
   }
 
-  Future<History?> getHistory(String id) async {
+  Future<History?> getHistory(int id) async {
     getIt<LogRepository>().logInfo('Get history: $id', tag: 'History');
     return await _database.getHistory(id);
   }

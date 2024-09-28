@@ -48,7 +48,8 @@ class AppDatabase extends _$AppDatabase {
         onConflict: DoUpdate((_) => history, target: [histories.id]));
   }
 
-  Future<void> insertBatchHistories(List<History> historiesToInput) async {
+  Future<void> insertBatchHistories(
+      List<HistoriesCompanion> historiesToInput) async {
     await batch((batch) {
       for (var history in historiesToInput) {
         batch.insert(
@@ -64,7 +65,7 @@ class AppDatabase extends _$AppDatabase {
     return await select(histories).get();
   }
 
-  Future<History?> getHistory(String id) async {
+  Future<History?> getHistory(int id) async {
     return await (select(histories)..where((tbl) => tbl.id.equals(id)))
         .getSingleOrNull();
   }
@@ -75,7 +76,8 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> updateFavourite(History history, bool isFavourite) {
-    return update(histories).replace(history.copyWith(isFavourite: isFavourite));
+    return update(histories)
+        .replace(history.copyWith(isFavourite: isFavourite));
   }
 
   Future<List<Log>> getAllLogs() async {

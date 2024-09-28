@@ -8,15 +8,6 @@ sealed class HistoryEvent extends Equatable {
   List<Object> get props => [];
 }
 
-final class HistoryStarted extends HistoryEvent {
-  final String id;
-
-  const HistoryStarted(this.id);
-
-  @override
-  List<Object> get props => [id];
-}
-
 final class HistoryFavoriteToggled extends HistoryEvent {
   final History history;
 

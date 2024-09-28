@@ -1,5 +1,6 @@
 import 'package:example_drift_with_bloc/bloc/histories/histories_bloc.dart';
 import 'package:example_drift_with_bloc/utils/routes.dart';
+import 'package:example_drift_with_bloc/widgets/history_item.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -54,16 +55,7 @@ class _AppState extends State<App> {
                   itemCount: state.history.length,
                   itemBuilder: (context, index) {
                     final history = state.history[index];
-                    return ListTile(
-                      title: Text(history.title ?? 'No title'),
-                      subtitle: Text(history.description ?? 'No description'),
-                      onTap: () {
-                        Navigator.of(context).pushNamed(
-                          Routes.history,
-                          arguments: history,
-                        );
-                      },
-                    );
+                    return HistoryItem(history: history);
                   },
                 );
               } else {
