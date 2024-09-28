@@ -27,28 +27,35 @@ final class HistoryRepository {
   }
 
   Future<List<History>> getHistories(int page, int limit) async {
-    getIt<LogRepository>().logInfo('Get histories: page: $page, limit: $limit', tag: 'History');
-    var histories = await _database.getHistories(limit: limit, offset: page * limit);
-    getIt<LogRepository>().logDebug('Get histories: ${histories.length} ${histories.map((h) => h.id)}', tag: 'History');
+    getIt<LogRepository>()
+        .logInfo('Get histories: page: $page, limit: $limit', tag: 'History');
+    var histories =
+        await _database.getHistories(limit: limit, offset: page * limit);
+    getIt<LogRepository>().logDebug(
+        'Get histories: ${histories.length} ${histories.map((h) => h.id)}',
+        tag: 'History');
     return histories;
   }
 
   Future<List<History>> getFavourites(int page, int limit) async {
-    getIt<LogRepository>().logInfo('Get favourites: page: $page, limit: $limit', tag: 'Favourite');
-    var histories =  await _database.getHistories(
+    getIt<LogRepository>().logInfo('Get favourites: page: $page, limit: $limit',
+        tag: 'Favourite');
+    var histories = await _database.getHistories(
         limit: limit, offset: page * limit, isFavourite: true);
-    getIt<LogRepository>().logDebug('Get favourites: ${histories.length} ${histories.map((h) => h.id)}', tag: 'Favourite');
+    getIt<LogRepository>().logDebug(
+        'Get favourites: ${histories.length} ${histories.map((h) => h.id)}',
+        tag: 'Favourite');
     return histories;
   }
 
-  Future<void> toggleFavourite(String id) async {
-    var favourite = await _database.getFavourite(id);
-    if (favourite != null) {
-      getIt<LogRepository>().logInfo('Removed from favourites: $id', tag: 'Favourite');
-      await _database.deleteFavourite(id);
+  Future<void> toggleFavourite(History history) async {
+    if (history.isFavourite) {
+      getIt<LogRepository>()
+          .logInfo('Removed from favourites: ${history.id}', tag: 'Favourite');
     } else {
-      getIt<LogRepository>().logInfo('Added to favourites: $id', tag: 'Favourite');
-      await _database.insertFavourite(id);
+      getIt<LogRepository>()
+          .logInfo('Added to favourites: ${history.id}', tag: 'Favourite');
     }
+    await _database.updateFavourite(history, !history.isFavourite);
   }
 }

@@ -8,7 +8,7 @@ part 'database.g.dart';
 
 part 'tables.dart';
 
-@DriftDatabase(tables: [Histories, Favourites, Logs])
+@DriftDatabase(tables: [Histories, Logs])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(driftDatabase(name: 'example_drift_with_bloc.db'));
 
@@ -24,18 +24,8 @@ class AppDatabase extends _$AppDatabase {
     await delete(logs).go();
   }
 
-  Future<void> clearFavourites() async {
-    await delete(favourites).go();
-  }
-
   Future<void> clearHistories() async {
     await delete(histories).go();
-  }
-
-  Future<void> clearAll() async {
-    await clearLogs();
-    await clearFavourites();
-    await clearHistories();
   }
 
   Future<void> insertLog(LogLevel level, String message, {String? tag}) async {
@@ -70,22 +60,6 @@ class AppDatabase extends _$AppDatabase {
     });
   }
 
-  Future<void> insertFavourite(String historyId) async {
-    await into(favourites).insert(FavouritesCompanion(
-      historyId: Value(historyId),
-    ));
-  }
-
-  Future<void> deleteFavourite(String historyId) async {
-    await (delete(favourites)..where((tbl) => tbl.historyId.equals(historyId)))
-        .go();
-  }
-
-  Future<void> deleteHistory(String historyId) async {
-    await (delete(histories)..where((tbl) => tbl.id.equals(historyId))).go();
-    deleteFavourite(historyId);
-  }
-
   Future<List<History>> getAllHistories() async {
     return await select(histories).get();
   }
@@ -96,41 +70,16 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<List<History>> getAllFavourites() async {
-    return await (select(histories)
-          ..join([
-            innerJoin(favourites, favourites.historyId.equalsExp(histories.id))
-          ])
-          ..get())
+    return await (select(histories)..where((h) => h.isFavourite.equals(true)))
         .get();
   }
 
-  Future<Favourite?> getFavourite(String historyId) async {
-    return await (select(favourites)
-          ..where((tbl) => tbl.historyId.equals(historyId)))
-        .getSingleOrNull();
+  Future<void> updateFavourite(History history, bool isFavourite) {
+    return update(histories).replace(history.copyWith(isFavourite: isFavourite));
   }
 
   Future<List<Log>> getAllLogs() async {
     return await select(logs).get();
-  }
-
-  Future<List<Log>> getLogsByLevel(LogLevel level) async {
-    return await (select(logs)..where((tbl) => tbl.level.equals(level.index)))
-        .get();
-  }
-
-  Future<List<Log>> getLogsByTag(String tag) async {
-    return await (select(logs)..where((tbl) => tbl.tag.equals(tag))).get();
-  }
-
-  Future<Log?> getLastError() async {
-    return await (select(logs)
-          ..where((tbl) =>
-              tbl.level.equals(LogLevel.error.index) |
-              tbl.level.equals(LogLevel.fatal.index))
-          ..orderBy([(tbl) => OrderingTerm.desc(tbl.date)])
-          ..limit(1))
-        .getSingleOrNull();
   }
 
   Future<Log?> getLastUpdate() async {
@@ -158,10 +107,6 @@ class AppDatabase extends _$AppDatabase {
         .then((value) => value.length);
   }
 
-  Future<int> getLogsCountAll() async {
-    return await (select(logs)).get().then((value) => value.length);
-  }
-
   FutureOr<List<String?>> getTags() async {
     return await (select(logs)
           ..addColumns([logs.tag])
@@ -175,10 +120,7 @@ class AppDatabase extends _$AppDatabase {
       {int limit = 10, int offset = 0, bool isFavourite = false}) async {
     if (isFavourite) {
       return await (select(histories)
-            ..join([
-              innerJoin(
-                  favourites, favourites.historyId.equalsExp(histories.id))
-            ])
+            ..where((h) => h.isFavourite.equals(true))
             ..orderBy([(tbl) => OrderingTerm.desc(tbl.date)])
             ..limit(limit, offset: offset))
           .get();

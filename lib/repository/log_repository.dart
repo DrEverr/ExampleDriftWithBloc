@@ -44,10 +44,6 @@ class LogRepository {
     return await _database.getLogsCount(level);
   }
 
-  Future<int> getAllLogsCount() async {
-    return await _database.getLogsCountAll();
-  }
-
   Future<List<String?>> getTags() async {
     return await _database.getTags();
   }

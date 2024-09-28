@@ -7,11 +7,7 @@ class Histories extends Table {
   TextColumn get description => text().nullable()();
   TextColumn get article => text().nullable()();
   DateTimeColumn get date => dateTime().nullable()();
-}
-
-class Favourites extends Table {
-  IntColumn get id => integer().autoIncrement()();
-  TextColumn get historyId => text().references(Histories, #id)();
+  BoolColumn get isFavourite => boolean().withDefault(const Constant(false))();
 }
 
 class Logs extends Table {

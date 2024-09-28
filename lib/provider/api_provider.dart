@@ -19,14 +19,16 @@ final class ApiProvider {
       if (response.statusCode == 200 && response.body.isNotEmpty) {
         var decoded = jsonDecode(response.body) as List<dynamic>;
         await _database.insertBatchHistories(decoded.map((e) {
-            return History(
-              id: e['id'] as String,
-              title: e['title'] as String?,
-              description: e['details'] as String?,
-              article: e['links']['article'] as String?,
-              date: e['event_date_utc'] != null
+          return History(
+            id: e['id'] as String,
+            title: e['title'] as String?,
+            description: e['details'] as String?,
+            article: e['links']['article'] as String?,
+            date: e['event_date_utc'] != null
                 ? DateTime.parse(e['event_date_utc'] as String)
-                : null);
+                : null,
+            isFavourite: false,
+          );
         }).toList());
       }
     } catch (e) {

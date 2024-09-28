@@ -24,7 +24,7 @@ class HistoryBloc extends Bloc<HistoryEvent, HistoryState> {
     });
 
     on<HistoryFavoriteToggled>((event, emit) async {
-      getIt<HistoryRepository>().toggleFavourite(event.history.id);
+      getIt<HistoryRepository>().toggleFavourite(event.history);
       emit(HistoryLoadSuccess(event.history));
     });
   }
