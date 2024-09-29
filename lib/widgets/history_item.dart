@@ -1,6 +1,7 @@
 import 'package:example_drift_with_bloc/bloc/histories/histories_bloc.dart';
 import 'package:example_drift_with_bloc/database/database.dart';
 import 'package:example_drift_with_bloc/utils/routes.dart';
+import 'package:example_drift_with_bloc/utils/tools.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -41,7 +42,8 @@ final class HistoryItem extends StatelessWidget {
           ),
         ),
         subtitle: Text(
-          history.description ?? 'No description',
+          Tools.shortenString(history.description ?? 'No description',
+              length: 200),
           style: TextStyle(
             color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
           ),
