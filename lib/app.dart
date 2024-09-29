@@ -1,4 +1,5 @@
 import 'package:example_drift_with_bloc/bloc/histories/histories_bloc.dart';
+import 'package:example_drift_with_bloc/database/database.dart';
 import 'package:example_drift_with_bloc/utils/routes.dart';
 import 'package:example_drift_with_bloc/widgets/history_item.dart';
 import 'package:flutter/material.dart';
@@ -47,19 +48,62 @@ class _AppState extends State<App> {
                 return const Center(
                   child: CircularProgressIndicator(),
                 );
-              } else if (state is HistoriesLoadSuccess) {
-                if (state.history.isEmpty) {
-                  return _noData(context, state);
-                }
-                return ListView.builder(
-                  itemCount: state.history.length,
-                  itemBuilder: (context, index) {
-                    final history = state.history[index];
-                    return HistoryItem(history: history);
+              } else {
+                return StreamBuilder<List<History>>(
+                  stream: context.read<HistoriesBloc>().historiesStream,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const CircularProgressIndicator();
+                    } else if (snapshot.hasError) {
+                      return Text('Error: ${snapshot.error}');
+                    } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return _noData(context, state);
+                    }
+                    return NotificationListener<ScrollNotification>(
+                      onNotification: (scrollNotification) {
+                        if (scrollNotification is ScrollEndNotification &&
+                            scrollNotification.metrics.extentAfter == 0) {
+                          context
+                              .read<HistoriesBloc>()
+                              .add(HistoriesLoadedMore());
+                        }
+                        return false;
+                      },
+                      child: Column(
+                        children: [
+                          StreamBuilder<int>(
+                            stream: context
+                                .read<HistoriesBloc>()
+                                .totalHistoriesStream,
+                            builder: (context, snapshot) {
+                              if (snapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return const CircularProgressIndicator();
+                              } else if (snapshot.hasError) {
+                                return Text('Error: ${snapshot.error}');
+                              } else if (!snapshot.hasData ||
+                                  snapshot.data == 0) {
+                                return const Text('No histories available');
+                              } else {
+                                return Text(
+                                    'Total histories: ${snapshot.data}');
+                              }
+                            },
+                          ),
+                          Expanded(
+                            child: ListView.builder(
+                              itemCount: snapshot.data!.length,
+                              itemBuilder: (context, index) {
+                                final history = snapshot.data![index];
+                                return HistoryItem(history: history);
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
                   },
                 );
-              } else {
-                return _noData(context, state);
               }
             },
           ),

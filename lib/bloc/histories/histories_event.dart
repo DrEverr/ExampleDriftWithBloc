@@ -12,9 +12,7 @@ final class HistoriesStarted extends HistoriesEvent {}
 
 final class HistoriesDataRequested extends HistoriesEvent {}
 
-final class HistoriesChangedNextPage extends HistoriesEvent {}
-
-final class HistoriesChangedPreviousPage extends HistoriesEvent {}
+final class HistoriesLoadedMore extends HistoriesEvent {}
 
 final class HistoriesToggledFavourite extends HistoriesEvent {
   final History history;

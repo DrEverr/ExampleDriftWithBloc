@@ -65,6 +65,14 @@ class AppDatabase extends _$AppDatabase {
     return await select(histories).get();
   }
 
+  Future<int> historiesCount() async {
+    return await select(histories).get().then((value) => value.length);
+  }
+
+  Stream<int> watchHistoriesCount() {
+    return select(histories).watch().map((event) => event.length);
+  }
+
   Future<History?> getHistory(int id) async {
     return await (select(histories)..where((tbl) => tbl.id.equals(id)))
         .getSingleOrNull();

@@ -37,6 +37,14 @@ final class HistoryRepository {
     return histories;
   }
 
+  Future<int> getHistoriesCount() async {
+    return await _database.historiesCount();
+  }
+
+  Stream<int> watchHistoriesCount() {
+    return _database.watchHistoriesCount();
+  }
+
   Future<List<History>> getFavourites(int page, int limit) async {
     getIt<LogRepository>().logInfo('Get favourites: page: $page, limit: $limit',
         tag: 'Favourite');

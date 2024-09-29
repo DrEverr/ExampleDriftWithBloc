@@ -30,7 +30,7 @@ class MyApp extends StatelessWidget {
       themeMode: ThemeMode.system,
       onGenerateRoute: AppRouter.generateRoute,
       debugShowCheckedModeBanner: false,
-      home: const App(title: 'Home page'),
+      home: const App(title: 'History of SpaceX missions'),
     );
   }
 }

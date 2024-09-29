@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:bloc/bloc.dart';
 import 'package:example_drift_with_bloc/database/database.dart';
 import 'package:example_drift_with_bloc/provider/api_provider.dart';
@@ -11,15 +13,26 @@ part 'histories_event.dart';
 part 'histories_state.dart';
 
 class HistoriesBloc extends Bloc<HistoriesEvent, HistoriesState> {
-  int page = 0;
+  int _page = 0;
+
+  List<History> _histories = [];
+  final _historiesStreamController = StreamController<List<History>>();
+  Stream<List<History>> get historiesStream =>
+      _historiesStreamController.stream;
+
+  Stream<int> get totalHistoriesStream =>
+      getIt<HistoryRepository>().watchHistoriesCount();
+
+  dispose() {
+    _historiesStreamController.close();
+  }
+
   HistoriesBloc() : super(HistoriesInitial()) {
     on<HistoriesStarted>((event, emit) async {
-      emit(HistoriesLoadInProgress());
       try {
-        page = 0;
-        final histories =
-            await getIt<HistoryRepository>().getHistories(page, 10);
-        emit(HistoriesLoadSuccess(histories));
+        _page = 0;
+        _histories = await getIt<HistoryRepository>().getHistories(_page, 10);
+        _historiesStreamController.sink.add(_histories);
       } catch (e) {
         emit(HistoriesLoadFailure(e.toString()));
       }
@@ -31,51 +44,42 @@ class HistoriesBloc extends Bloc<HistoriesEvent, HistoriesState> {
         var lastUpdate = await getIt<LogRepository>().getLastUpdate();
         if (lastUpdate == null ||
             lastUpdate.compareTo(
-                    DateTime.now().subtract(const Duration(minutes: 1))) <=
+                    DateTime.now().subtract(const Duration(hours: 1))) <=
                 0) {
           await getIt<ApiProvider>().getHistories();
         } else {
           emit(const HistoriesLoadFailure(
               'Data has already been updated within the last hour.'));
         }
-        final histories = await getIt<HistoryRepository>().getHistories(0, 10);
-        emit(HistoriesLoadSuccess(histories));
+        add(HistoriesStarted());
       } catch (e) {
         emit(HistoriesLoadFailure(e.toString()));
       }
     });
 
-    on<HistoriesChangedNextPage>((event, emit) async {
-      emit(HistoriesLoadInProgress());
-      try {
-        page++;
-        final histories =
-            await getIt<HistoryRepository>().getHistories(page, 10);
-        emit(HistoriesLoadSuccess(histories));
-      } catch (e) {
-        emit(HistoriesLoadFailure(e.toString()));
+    on<HistoriesLoadedMore>((event, emit) async {
+      if ((_page + 1) * 10 >=
+          await getIt<HistoryRepository>().getHistoriesCount()) {
+        return;
       }
-    });
-
-    on<HistoriesChangedPreviousPage>((event, emit) async {
-      emit(HistoriesLoadInProgress());
       try {
-        page--;
-        final histories =
-            await getIt<HistoryRepository>().getHistories(page, 10);
-        emit(HistoriesLoadSuccess(histories));
+        _page++;
+        _histories
+            .addAll(await getIt<HistoryRepository>().getHistories(_page, 10));
+        _historiesStreamController.sink.add(_histories);
       } catch (e) {
         emit(HistoriesLoadFailure(e.toString()));
       }
     });
 
     on<HistoriesToggledFavourite>((event, emit) async {
-      emit(HistoriesLoadInProgress());
       try {
         await getIt<HistoryRepository>().toggleFavourite(event.history);
-        final histories =
-            await getIt<HistoryRepository>().getHistories(page, 10);
-        emit(HistoriesLoadSuccess(histories));
+        var updatedHistory =
+            event.history.copyWith(isFavourite: !event.history.isFavourite);
+        var index = _histories.indexWhere((h) => h.id == updatedHistory.id);
+        _histories[index] = updatedHistory;
+        _historiesStreamController.sink.add(_histories);
       } catch (e) {
         emit(HistoriesLoadFailure(e.toString()));
       }
